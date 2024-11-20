@@ -1,0 +1,15 @@
+.observable-plot-container {
+    width: 100%;
+    margin: 1em 0;
+    padding: 1em;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+}
+
+/* Ensure plots are responsive */
+.observable-plot-container svg {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+}
