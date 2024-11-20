@@ -1,12 +1,14 @@
-# Obsidian Observable Plot Plugin
+# An Obsidian Plugin for creating Observable Plots
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L4L216D6FC)
 
-This plugin allows you to create beautiful data visualizations in your Obsidian notes using Observable Plot and D3.js. Create dynamic, interactive plots directly in your markdown documents with the full power of Observable Plot's visualization capabilities and D3's data manipulation utilities.
+Created by [Cory Chainsman](https://x.com/corychainsman)
+
+This plugin allows you to create data visualizations in your Obsidian notes using [Observable Plot](https://observablehq.com/plot) and [D3.js](https://d3js.org/). 
 
 ## Features
 
 - Create plots using Observable Plot's intuitive API
 - Transform and manipulate data using D3.js
-- Support for both simple and complex visualizations
 - Full JavaScript environment for data processing
 - Customizable styling and layout options
 - Responsive SVG output
@@ -15,19 +17,20 @@ This plugin allows you to create beautiful data visualizations in your Obsidian 
 
 1. Open Obsidian Settings
 2. Go to Community Plugins and disable Safe Mode
-3. Click Browse and search for "Observable Plot"
+3. Click Browse and search for "Obsidian-Plot"
 4. Install the plugin and enable it
 
 ## Basic Usage
 
 Create a code block in your note with the language set to `plot`. The code block should contain a JSON object with:
 - `data`: An array of data points
-- `code` (optional): JavaScript code that returns a plot specification
+- `code` (optional): JavaScript code that returns an Observable plot specification
 
 ### Simple Plot
 
 The simplest plot requires only data:
 
+````
 ```plot
 {
   "data": [
@@ -37,6 +40,7 @@ The simplest plot requires only data:
   ]
 }
 ```
+````
 
 This will create a scatter plot using default settings.
 
@@ -44,6 +48,7 @@ This will create a scatter plot using default settings.
 
 Add custom styling and configuration:
 
+````
 ```plot
 {
   "data": [
@@ -64,82 +69,15 @@ Add custom styling and configuration:
   "
 }
 ```
+````
 
 ## Advanced Features
 
 ### Data Transformation with D3
 
-Use D3's powerful data manipulation functions:
+Use D3 or normal javascript and return the Plot:
 
-```plot
-{
-  "data": [
-    {"date": "2023-01-01", "value": 100},
-    {"date": "2023-02-01", "value": 120},
-    {"date": "2023-03-01", "value": 90},
-    {"date": "2023-04-01", "value": 150}
-  ],
-  "code": "
-    // Parse dates and values
-    const parseDate = d3.timeParse('%Y-%m-%d');
-    const cleanData = data.map(d => ({
-      date: parseDate(d.date),
-      value: +d.value
-    }));
-
-    // Calculate rolling average
-    const movingAvg = d3.rolling(
-      cleanData.map(d => d.value),
-      3,
-      d3.mean
-    );
-
-    // Create averaged dataset
-    const avgData = cleanData.map((d, i) => ({
-      date: d.date,
-      value: movingAvg[i] || d.value
-    }));
-
-    return {
-      width: 600,
-      height: 400,
-      margin: 40,
-      marks: [
-        Plot.line(cleanData, {
-          x: 'date',
-          y: 'value',
-          stroke: 'blue',
-          strokeWidth: 1
-        }),
-        Plot.line(avgData, {
-          x: 'date',
-          y: 'value',
-          stroke: 'red',
-          strokeWidth: 2
-        }),
-        Plot.dot(cleanData, {
-          x: 'date',
-          y: 'value',
-          fill: 'blue'
-        })
-      ],
-      x: {
-        type: 'time',
-        label: 'Date'
-      },
-      y: {
-        grid: true,
-        label: 'Value'
-      }
-    };
-  "
-}
-```
-
-### Statistical Visualization
-
-Create statistical visualizations using D3:
-
+````
 ```plot
 {
   "data": [
@@ -204,11 +142,13 @@ Create statistical visualizations using D3:
   "
 }
 ```
+````
 
 ### Custom Styling
 
-Apply custom styles to your plots:
+Apply custom styles to your plot with D3:
 
+````
 ```plot
 {
   "data": [
@@ -259,6 +199,7 @@ Apply custom styles to your plots:
   "
 }
 ```
+````
 
 ## API Reference
 
@@ -271,15 +212,15 @@ The plot code block accepts a JSON object with the following properties:
 
 ### Available Libraries
 
-Your code has access to:
+Your plot code has access to:
 
-- `Plot`: The Observable Plot library
-- `d3`: The D3.js library
+- `Plot`: The [Observable Plot](https://github.com/observablehq/plot) library
+- `d3`: The [D3.js](https://d3js.org/) library
 - `data`: Your input data array
 
 ### Plot Specification
 
-The plot specification object can include:
+The plot specification object can include all of the standard Observable Plot features
 
 - `width`: Plot width in pixels
 - `height`: Plot height in pixels
@@ -290,6 +231,7 @@ The plot specification object can include:
 - `y`: Y-axis configuration
 - `color`: Color scale configuration
 - `grid`: Boolean or grid configuration object
+- etc...
 
 ## Development
 
