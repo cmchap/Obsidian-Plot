@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-observable-plot",
-	"name": "Obsidian Plot",
+	"name": "Obsidian Observable Plot",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.7",
-	"description": "Render Observable Plot graphs in your Obsidian notes",
+	"description": "Embed Observable Plot graphs in your Obsidian notes",
 	"author": "Cory Chainsman",
 	"isDesktopOnly": false
 }
