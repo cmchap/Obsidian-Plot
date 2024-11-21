@@ -3,7 +3,7 @@
 	"name": "Obsidian Observable Plot",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.7",
-	"description": "Embed Observable Plot graphs in your Obsidian notes",
+	"description": "Embed Observable Plot visualizations in your Obsidian notes",
 	"author": "Cory Chainsman",
 	"isDesktopOnly": false
 }
