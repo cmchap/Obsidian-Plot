@@ -26,3 +26,8 @@
     height: 100%;
     flex: 1;
 }
+
+/* select if the aria label is set to "tip" */
+[aria-label="tip"] {
+    fill: var(--modal-background);
+}
