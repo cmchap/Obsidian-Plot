@@ -9,9 +9,8 @@ This plugin allows you to create data visualizations in your Obsidian notes usin
 
 - Create plots using Observable Plot's intuitive API
 - Transform and manipulate data using D3.js
-- Full JavaScript environment for data processing
+- A JavaScript environment for data processing
 - Customizable styling and layout options
-- Responsive SVG output
 
 ## Installation
 
@@ -29,7 +28,7 @@ Create a code block in your note with the language set to `plot`. The code block
 
 ### Simple Plot
 
-The simplest plot requires only data, which can be provided directly:
+The simplest plot requires only X and Y data, which can be provided directly:
 
 ````
 ```plot
@@ -41,9 +40,9 @@ The simplest plot requires only data, which can be provided directly:
   ]
 }
 ```
-```
+````
 
-Or fetched from a URL:
+Or fetched from a URL if the data is too large or you vault. Note that plots based on dataUrls this will not render when offline:
 
 ````
 ```plot
@@ -61,7 +60,7 @@ Or fetched from a URL:
   "
 }
 ```
-```
+````
 
 ### Custom Plot
 
@@ -88,13 +87,13 @@ Add custom styling and configuration:
   "
 }
 ```
-```
+````
 
 ## Advanced Features
 
 ### Data Transformation with D3
 
-Use D3 or normal javascript and return the Plot:
+Use D3 or vanilla javascript and return the plot parameters:
 
 ````
 ```plot
@@ -161,7 +160,7 @@ Use D3 or normal javascript and return the Plot:
   "
 }
 ```
-```
+````
 
 ### Custom Styling
 
@@ -218,7 +217,7 @@ Apply custom styles to your plot with D3:
   "
 }
 ```
-```
+````
 
 ## API Reference
 
@@ -227,7 +226,7 @@ Apply custom styles to your plot with D3:
 The plot code block accepts a JSON object with the following properties:
 
 - `data` (required if `dataUrl` not provided): Array of data objects
-- `dataUrl` (required if `data` not provided): URL to fetch JSON data from
+- `dataUrl` (required if `data` not provided): URL to fetch JSON data from. Note that plots based on dataUrls this will not render when offline.
 - `code` (optional): JavaScript code that returns a plot specification
 
 ### Available Libraries
@@ -262,11 +261,6 @@ The plot specification object can include all of the standard Observable Plot fe
 ### Building
 
 - `npm run build` will create a production build
-
-### Installing for Development
-
-1. Copy `main.js`, `manifest.json`, and `styles.css` to your Obsidian plugins folder
-2. Enable the plugin in Obsidian's settings
 
 ## Contributing
 
