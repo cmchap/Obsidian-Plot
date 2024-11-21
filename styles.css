@@ -5,11 +5,24 @@
     border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
     background-color: var(--background-primary);
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-/* Ensure plots are responsive */
+.observable-plot-container > figure {
+    width: 100% !important;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* Ensure plots render at their intended size */
 .observable-plot-container svg {
     width: 100%;
-    height: auto;
-    min-height: 400px;
+    max-width: 100%;
+    height: 100%;
+    flex: 1;
 }

@@ -3,7 +3,8 @@ import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 
 interface PlotConfig {
-    data: any[];
+    data?: any[];
+    dataUrl?: string;
     code?: string;
 }
 
@@ -53,75 +54,83 @@ export default class ObservablePlotPlugin extends Plugin {
                         throw new Error("Failed to parse JSON and couldn't find code section");
                     }
                 }
-                
+
+                // Fetch data from URL if provided
+                let plotData: any[];
+                if (config.dataUrl) {
+                    try {
+                        this.logMessage(`Fetching data from ${config.dataUrl}`);
+                        const response = await fetch(config.dataUrl);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        plotData = await response.json();
+                        this.logMessage(`Successfully fetched data: ${plotData.length} items`);
+                    } catch (error) {
+                        throw new Error(`Failed to fetch data from URL: ${error.message}`);
+                    }
+                } else if (config.data) {
+                    plotData = config.data;
+                } else {
+                    throw new Error('Either data or dataUrl must be provided');
+                }
+
                 // Create a container for the plot
                 const plotContainer = el.createDiv({ cls: 'observable-plot-container' });
-                
-                // Create an SVG element for the plot
-                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                plotContainer.appendChild(svg);
-                
+
                 // Create the plot
                 if (config.code) {
                     // Create a function that wraps the user's code
-                    const plotFunction = new Function('Plot', 'd3', 'data', 'svg', 'log', `
+                    const plotFunction = new Function('Plot', 'd3', 'data', 'container', `
                         try {
-                            log("Creating user function with code:\\n" + \`${config.code}\`);
-                            
                             // Execute the user's code and get the plot specification
                             const userFunction = new Function('Plot', 'd3', 'data', \`
                                 try {
                                     ${config.code}
                                 } catch (e) {
-                                    log("Error in user code: " + e.message);
                                     throw e;
                                 }
                             \`);
                             
-                            log("Executing user function...");
                             const spec = userFunction(Plot, d3, data);
-                            log("User function result: " + JSON.stringify(spec));
-                            
                             if (!spec) {
-                                throw new Error('No plot specification returned. Make sure your code returns a plot specification object.');
+                                throw new Error('No plot specification returned');
                             }
                             
-                            log("Plot spec: " + JSON.stringify(spec, null, 2));
-
-                            // Create and render the plot
                             const plot = Plot.plot(spec);
-                            log("Created plot: " + plot.outerHTML.substring(0, 100) + "...");
                             
-                            if (plot && plot instanceof SVGElement) {
-                                // Copy attributes and content from the created plot to our SVG
-                                Array.from(plot.attributes).forEach(attr => {
-                                    svg.setAttribute(attr.name, attr.value);
-                                });
-                                svg.innerHTML = plot.innerHTML;
-                            } else {
-                                throw new Error('Plot.plot() did not return an SVG element');
+                            if (!plot) {
+                                throw new Error('Plot.plot() returned null');
                             }
+
+
+                            
+                            // Clear the container and append the plot
+                            container.empty();
+                            container.appendChild(plot);
+                            
                         } catch (error) {
                             throw error;
                         }
                     `);
                     
-                    // Execute the function with Plot library, D3, data, SVG element, and logging function
-                    plotFunction(Plot, d3, config.data, svg, (msg: string) => this.logMessage(msg));
+                    // Execute the function with Plot library, D3, data, and container element
+                    plotFunction(Plot, d3, plotData, plotContainer);
                 } else {
                     // Default plot if no code is provided
                     const plot = Plot.plot({
-                        marks: [Plot.dot(config.data)]
+                        width: 640,
+                        height: 400,
+                        margin: 40,
+                        marks: [Plot.dot(plotData)]
                     });
-                    if (plot && plot instanceof SVGElement) {
-                        // Copy attributes and content from the created plot to our SVG
-                        Array.from(plot.attributes).forEach(attr => {
-                            svg.setAttribute(attr.name, attr.value);
-                        });
-                        svg.innerHTML = plot.innerHTML;
-                    } else {
-                        throw new Error('Plot.plot() did not return an SVG element');
+                    
+                    if (!plot) {
+                        throw new Error('Plot.plot() returned null');
                     }
+                    
+                    plotContainer.empty();
+                    plotContainer.appendChild(plot);
                 }
 
             } catch (error) {
