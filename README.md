@@ -23,12 +23,13 @@ This plugin allows you to create data visualizations in your Obsidian notes usin
 ## Basic Usage
 
 Create a code block in your note with the language set to `plot`. The code block should contain a JSON object with:
-- `data`: An array of data points
-- `code` (optional): JavaScript code that returns an Observable plot specification
+- `data`: An array of data points (optional if `dataUrl` is provided)
+- `dataUrl`: URL to fetch JSON data from (optional if `data` is provided)
+- `code` (optional): JavaScript code that returns a plot specification
 
 ### Simple Plot
 
-The simplest plot requires only data:
+The simplest plot requires only data, which can be provided directly:
 
 ````
 ```plot
@@ -40,9 +41,27 @@ The simplest plot requires only data:
   ]
 }
 ```
-````
+```
 
-This will create a scatter plot using default settings.
+Or fetched from a URL:
+
+````
+```plot
+{
+  "dataUrl": "https://api.example.com/data.json",
+  "code": "
+    // Data is automatically fetched and provided to your code
+    return {
+      marks: [
+        Plot.line(data, {x: 'x', y: 'y', stroke: 'blue', strokeWidth: 2}),
+        Plot.dot(data, {x: 'x', y: 'y', fill: 'red', r: 5})
+      ],
+      grid: true
+    };
+  "
+}
+```
+```
 
 ### Custom Plot
 
@@ -69,7 +88,7 @@ Add custom styling and configuration:
   "
 }
 ```
-````
+```
 
 ## Advanced Features
 
@@ -142,7 +161,7 @@ Use D3 or normal javascript and return the Plot:
   "
 }
 ```
-````
+```
 
 ### Custom Styling
 
@@ -199,7 +218,7 @@ Apply custom styles to your plot with D3:
   "
 }
 ```
-````
+```
 
 ## API Reference
 
@@ -207,7 +226,8 @@ Apply custom styles to your plot with D3:
 
 The plot code block accepts a JSON object with the following properties:
 
-- `data` (required): Array of data objects
+- `data` (required if `dataUrl` not provided): Array of data objects
+- `dataUrl` (required if `data` not provided): URL to fetch JSON data from
 - `code` (optional): JavaScript code that returns a plot specification
 
 ### Available Libraries
