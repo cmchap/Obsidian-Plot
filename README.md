@@ -219,6 +219,75 @@ Apply custom styles to your plot with D3:
 ```
 ````
 
+## Data Sources
+
+The plugin supports multiple data formats through the `dataUrl` parameter:
+
+### JSON and GeoJSON/TopoJSON
+
+Load regular JSON data arrays, GeoJSON, or TopoJSON files:
+
+````
+```plot
+{
+  "dataUrl": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson",
+  "code": "
+    // Fetch world map data
+    const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(res => res.json());
+    const land = topojson.feature(world, world.objects.land);
+    
+    return { 
+      projection: 'equirectangular',
+      style: 'overflow: visible;',
+      marks: [ 
+        Plot.geo(land, {fill: 'currentColor', fillOpacity: 0.2}),
+        Plot.sphere(),
+        Plot.geo(data.features, {
+          r: d => d.properties.mag,
+          fill: 'red',
+          fillOpacity: 0.2,
+          stroke: 'red',
+          title: d => d.properties.title
+        })
+      ]
+    }
+  "
+}
+```
+````
+
+### CSV and TSV
+
+Load data from CSV or TSV files. The plugin automatically detects the format and parses numeric values:
+
+````
+```plot
+{
+  "dataUrl": "https://raw.githubusercontent.com/mbostock/plotdb/master/data/diamonds.csv",
+  "code": "
+    return {
+      grid: true,
+      marks: [
+        Plot.dot(data, {
+          x: 'carat',
+          y: 'price',
+          fill: 'cut',
+          title: d => `${d.cut}: ${d.carat} carats, $${d.price}`
+        })
+      ]
+    }
+  "
+}
+```
+````
+
+The plugin will automatically:
+- Detect the file format based on extension (.json, .geojson, .topojson, .csv, .tsv)
+- Parse numeric values in CSV/TSV files using D3's autoType
+- Handle GeoJSON and TopoJSON structures appropriately
+- Fall back to format auto-detection if the extension is unclear
+
 ## API Reference
 
 ### Plot Configuration
