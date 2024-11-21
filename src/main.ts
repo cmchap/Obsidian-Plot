@@ -64,7 +64,33 @@ export default class ObservablePlotPlugin extends Plugin {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
-                        plotData = await response.json();
+                        
+                        // Get the file extension to determine the parser
+                        const url = new URL(config.dataUrl);
+                        const ext = url.pathname.split('.').pop()?.toLowerCase();
+                        
+                        const text = await response.text();
+                        switch (ext) {
+                            case 'csv':
+                                plotData = d3.csvParse(text, d3.autoType);
+                                break;
+                            case 'tsv':
+                                plotData = d3.tsvParse(text, d3.autoType);
+                                break;
+                            case 'json':
+                                plotData = JSON.parse(text);
+                                break;
+                            default:
+                                // Try to auto-detect the format
+                                if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                                    plotData = JSON.parse(text);
+                                } else if (text.includes('\t')) {
+                                    plotData = d3.tsvParse(text);
+                                } else {
+                                    plotData = d3.csvParse(text);
+                                }
+                        }
+                        
                         this.logMessage(`Successfully fetched data: ${plotData.length} items`);
                     } catch (error) {
                         throw new Error(`Failed to fetch data from URL: ${error.message}`);
