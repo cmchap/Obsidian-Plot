@@ -1,6 +1,7 @@
 import { Plugin, MarkdownPostProcessorContext } from 'obsidian';
 import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
+import * as topojson from 'topojson-client';
 
 interface PlotConfig {
     data?: any[];
@@ -78,20 +79,48 @@ export default class ObservablePlotPlugin extends Plugin {
                                 plotData = d3.tsvParse(text, d3.autoType);
                                 break;
                             case 'json':
-                                plotData = JSON.parse(text);
+                            case 'geojson':
+                            case 'topojson':
+                                const data = JSON.parse(text);
+                                // If it's a TopoJSON file (check for objects property)
+                                if (data.objects) {
+                                    // Let the user handle the TopoJSON conversion in their code
+                                    plotData = data;
+                                } 
+                                // If it's a GeoJSON file (check for type property)
+                                else if (data.type === 'FeatureCollection' || data.type === 'Feature') {
+                                    plotData = data;
+                                }
+                                // Regular JSON array
+                                else if (Array.isArray(data)) {
+                                    plotData = data;
+                                }
+                                // Regular JSON object
+                                else {
+                                    plotData = [data];
+                                }
                                 break;
                             default:
                                 // Try to auto-detect the format
                                 if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-                                    plotData = JSON.parse(text);
+                                    const data = JSON.parse(text);
+                                    if (data.objects) {
+                                        plotData = data;
+                                    } else if (data.type === 'FeatureCollection' || data.type === 'Feature') {
+                                        plotData = data;
+                                    } else if (Array.isArray(data)) {
+                                        plotData = data;
+                                    } else {
+                                        plotData = [data];
+                                    }
                                 } else if (text.includes('\t')) {
-                                    plotData = d3.tsvParse(text);
+                                    plotData = d3.tsvParse(text, d3.autoType);
                                 } else {
-                                    plotData = d3.csvParse(text);
+                                    plotData = d3.csvParse(text, d3.autoType);
                                 }
                         }
                         
-                        this.logMessage(`Successfully fetched data: ${plotData.length} items`);
+                        this.logMessage(`Successfully fetched data: ${typeof plotData === 'object' ? 'GeoJSON/TopoJSON' : plotData.length + ' items'}`);
                     } catch (error) {
                         throw new Error(`Failed to fetch data from URL: ${error.message}`);
                     }
@@ -107,41 +136,45 @@ export default class ObservablePlotPlugin extends Plugin {
                 // Create the plot
                 if (config.code) {
                     // Create a function that wraps the user's code
-                    const plotFunction = new Function('Plot', 'd3', 'data', 'container', `
-                        try {
-                            // Execute the user's code and get the plot specification
-                            const userFunction = new Function('Plot', 'd3', 'data', \`
-                                try {
-                                    ${config.code}
-                                } catch (e) {
-                                    throw e;
+                    const plotFunction = new Function('Plot', 'd3', 'data', 'topojson', 'container', `
+                        return (async () => {
+                            try {
+                                // Execute the user's code and get the plot specification
+                                const userFunction = new Function('Plot', 'd3', 'data', 'topojson', \`
+                                    return (async () => {
+                                        try {
+                                            ${config.code}
+                                        } catch (e) {
+                                            throw e;
+                                        }
+                                    })();
+                                \`);
+                                
+                                const spec = await userFunction(Plot, d3, data, topojson);
+                                if (!spec) {
+                                    throw new Error('No plot specification returned');
                                 }
-                            \`);
-                            
-                            const spec = userFunction(Plot, d3, data);
-                            if (!spec) {
-                                throw new Error('No plot specification returned');
+                                
+                                const plot = Plot.plot(spec);
+                                
+                                if (!plot) {
+                                    throw new Error('Plot.plot() returned null');
+                                }
+                                
+                                // Clear the container and append the plot
+                                container.empty();
+                                container.appendChild(plot);
+                            } catch (error) {
+                                throw error;
                             }
-                            
-                            const plot = Plot.plot(spec);
-                            
-                            if (!plot) {
-                                throw new Error('Plot.plot() returned null');
-                            }
-
-
-                            
-                            // Clear the container and append the plot
-                            container.empty();
-                            container.appendChild(plot);
-                            
-                        } catch (error) {
-                            throw error;
-                        }
+                        })();
                     `);
                     
-                    // Execute the function with Plot library, D3, data, and container element
-                    plotFunction(Plot, d3, plotData, plotContainer);
+                    // Execute the function with Plot library, D3, data, topojson, and container element
+                    plotFunction(Plot, d3, plotData, topojson, plotContainer).catch(error => {
+                        console.error('Error in plot generation:', error);
+                        plotContainer.setText('Error generating plot: ' + error.message);
+                    });
                 } else {
                     // Default plot if no code is provided
                     const plot = Plot.plot({
