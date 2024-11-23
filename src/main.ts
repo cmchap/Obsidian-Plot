@@ -1,4 +1,4 @@
-import { Plugin, MarkdownPostProcessorContext } from 'obsidian';
+import { Plugin, requestUrl } from 'obsidian';
 import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
@@ -33,7 +33,7 @@ export default class ObservablePlotPlugin extends Plugin {
                 } catch (e) {
                     // If initial parse fails, try to handle formatted JSON
                     // This regex matches a JSON string but preserves newlines in the code property
-                    const codeMatch = source.match(/("code"\s*:\s*")(.*?)("(?=\s*[}\],]))/s);
+                    const codeMatch = source.match(/("code"\s*:\s*")((?:[^"\\]|\\["\\])*)"/);
                     if (codeMatch) {
                         // Temporarily replace the code section with a placeholder
                         const placeholder = "__CODE_PLACEHOLDER__";
@@ -61,8 +61,8 @@ export default class ObservablePlotPlugin extends Plugin {
                 if (config.dataUrl) {
                     try {
                         this.logMessage(`Fetching data from ${config.dataUrl}`);
-                        const response = await fetch(config.dataUrl);
-                        if (!response.ok) {
+                        const response = await requestUrl(config.dataUrl);
+                        if (response.status < 200 || response.status >= 300) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         
@@ -70,7 +70,7 @@ export default class ObservablePlotPlugin extends Plugin {
                         const url = new URL(config.dataUrl);
                         const ext = url.pathname.split('.').pop()?.toLowerCase();
                         
-                        const text = await response.text();
+                        const text = response.text;  
                         switch (ext) {
                             case 'csv':
                                 plotData = d3.csvParse(text, d3.autoType);
@@ -86,18 +86,8 @@ export default class ObservablePlotPlugin extends Plugin {
                                 if (data.objects) {
                                     // Let the user handle the TopoJSON conversion in their code
                                     plotData = data;
-                                } 
-                                // If it's a GeoJSON file (check for type property)
-                                else if (data.type === 'FeatureCollection' || data.type === 'Feature') {
+                                } else {
                                     plotData = data;
-                                }
-                                // Regular JSON array
-                                else if (Array.isArray(data)) {
-                                    plotData = data;
-                                }
-                                // Regular JSON object
-                                else {
-                                    plotData = [data];
                                 }
                                 break;
                             default:
@@ -106,12 +96,8 @@ export default class ObservablePlotPlugin extends Plugin {
                                     const data = JSON.parse(text);
                                     if (data.objects) {
                                         plotData = data;
-                                    } else if (data.type === 'FeatureCollection' || data.type === 'Feature') {
-                                        plotData = data;
-                                    } else if (Array.isArray(data)) {
-                                        plotData = data;
                                     } else {
-                                        plotData = [data];
+                                        plotData = data;
                                     }
                                 } else if (text.includes('\t')) {
                                     plotData = d3.tsvParse(text, d3.autoType);
@@ -120,7 +106,7 @@ export default class ObservablePlotPlugin extends Plugin {
                                 }
                         }
                         
-                        this.logMessage(`Successfully fetched data: ${typeof plotData === 'object' ? 'GeoJSON/TopoJSON' : plotData.length + ' items'}`);
+                        this.logMessage(`Successfully fetched data: ${Array.isArray(plotData) ? plotData.length + ' items' : 'GeoJSON/TopoJSON'}`);
                     } catch (error) {
                         throw new Error(`Failed to fetch data from URL: ${error.message}`);
                     }
@@ -171,7 +157,7 @@ export default class ObservablePlotPlugin extends Plugin {
                     `);
                     
                     // Execute the function with Plot library, D3, data, topojson, and container element
-                    plotFunction(Plot, d3, plotData, topojson, plotContainer).catch(error => {
+                    plotFunction(Plot, d3, plotData, topojson, plotContainer).catch((error: Error) => {
                         console.error('Error in plot generation:', error);
                         plotContainer.setText('Error generating plot: ' + error.message);
                     });
