@@ -10,17 +10,8 @@ interface PlotConfig {
 }
 
 export default class ObservablePlotPlugin extends Plugin {
-    private logMessage(message: string, isError = false) {
-        const prefix = '[Observable Plot]';
-        if (isError) {
-            console.error(prefix, message);
-        } else {
-            console.log(prefix, message);
-        }
-    }
 
     async onload() {
-        this.logMessage('Loading plugin');
 
         // Register the plot code block processor
         this.registerMarkdownCodeBlockProcessor('plot', async (source, el, ctx) => {
