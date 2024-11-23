@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import fs from "fs/promises";
 
 const banner =
 `/*
@@ -10,6 +11,18 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+// List of files to copy to dist
+const distFiles = [
+    { src: 'src/styles.css', dest: 'dist/styles.css' },
+    { src: 'src/manifest.json', dest: 'dist/manifest.json' },
+];
+
+// Check if versions.json exists and add it to distFiles if it does
+try {
+    await fs.access('versions.json');
+    distFiles.push({ src: 'versions.json', dest: 'dist/versions.json' });
+} catch {}
 
 const context = await esbuild.context({
     banner: {
@@ -37,8 +50,25 @@ const context = await esbuild.context({
     logLevel: "info",
     sourcemap: prod ? false : "inline",
     treeShaking: true,
-    outfile: "main.js",
+    outfile: "dist/main.js",
 });
+
+// Ensure dist directory exists
+try {
+    await fs.access('dist');
+} catch {
+    await fs.mkdir('dist');
+}
+
+// Copy all distribution files
+for (const file of distFiles) {
+    try {
+        await fs.copyFile(file.src, file.dest);
+        console.log(`Copied ${file.src} to ${file.dest}`);
+    } catch (err) {
+        console.error(`Failed to copy ${file.src}: ${err.message}`);
+    }
+}
 
 if (prod) {
     await context.rebuild();

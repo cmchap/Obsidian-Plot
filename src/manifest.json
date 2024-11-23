@@ -5,5 +5,6 @@
 	"minAppVersion": "1.7.7",
 	"description": "Embed Observable Plot visualizations in your notes",
 	"author": "Cory Chainsman",
-	"isDesktopOnly": false
+	"isDesktopOnly": false,
+	"css": "dist/styles.css"
 }

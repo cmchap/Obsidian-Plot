@@ -60,7 +60,6 @@ export default class ObservablePlotPlugin extends Plugin {
                 let plotData: any[];
                 if (config.dataUrl) {
                     try {
-                        this.logMessage(`Fetching data from ${config.dataUrl}`);
                         const response = await requestUrl(config.dataUrl);
                         if (response.status < 200 || response.status >= 300) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -105,8 +104,6 @@ export default class ObservablePlotPlugin extends Plugin {
                                     plotData = d3.csvParse(text, d3.autoType);
                                 }
                         }
-                        
-                        this.logMessage(`Successfully fetched data: ${Array.isArray(plotData) ? plotData.length + ' items' : 'GeoJSON/TopoJSON'}`);
                     } catch (error) {
                         throw new Error(`Failed to fetch data from URL: ${error.message}`);
                     }
@@ -179,13 +176,8 @@ export default class ObservablePlotPlugin extends Plugin {
                 }
 
             } catch (error) {
-                this.logMessage(error.message, true);
                 el.setText('Error rendering plot: ' + error.message);
             }
         });
-    }
-
-    onunload() {
-        this.logMessage('Unloading plugin');
     }
 }

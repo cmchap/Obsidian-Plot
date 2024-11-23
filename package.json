@@ -2,7 +2,7 @@
   "name": "obsidian-observable-plot",
   "version": "1.0.0",
   "description": "An Obsidian plugin for rendering Observable Plot graphs",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
