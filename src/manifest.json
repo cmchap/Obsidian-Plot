@@ -6,5 +6,5 @@
 	"description": "Embed Observable Plot visualizations in your notes",
 	"author": "Cory Chainsman",
 	"isDesktopOnly": false,
-	"css": "dist/styles.css"
+	"css": "styles.css"
 }
